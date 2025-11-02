@@ -1,0 +1,10 @@
+name: apc-propeller-env
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - matplotlib
+  # Add any other dependencies your project needs
