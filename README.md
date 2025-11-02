@@ -1,4 +1,4 @@
-## To use
+## Usage
 1. Download the entire repo
 2. Unzip 
 3. Open USEME.py (numpy, matplotlib, and scipy need to be installed in the Python environment)
