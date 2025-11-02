@@ -8,4 +8,4 @@ Steps to use:
 
 ![Sample fixed RPM, Vinf efficiency map](Sample_7600RPM_30Vinf_electric.png)
 
-![Sample fixed Vinf, optimal RPM efficiency map](Sample_optimalRPMs_30Vinf_electric)
+![Sample fixed Vinf, optimal RPM efficiency map](Sample_optimalRPMs_30Vinf_electric.png)
