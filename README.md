@@ -1,4 +1,4 @@
-# To use
+## To use
 1. Download the entire repo
 2. Unzip 
 3. Open USEME.py (numpy, matplotlib, and scipy need to be installed in the Python environment)
@@ -9,6 +9,7 @@
            and Plimit (mechanical power limit in $W$)
 6. Enjoy!
 
+## Sample Plots
 Example fixed RPM, Vinf efficiency map
 ![Sample fixed RPM, Vinf efficiency map](Sample_7600RPM_30Vinf_electric.png)
 
