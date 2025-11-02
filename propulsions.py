@@ -1,136 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Propulsions Model Restructuring (8/29/2025)
-File structure:
-    - Numerical methods for numba calculation (bisection, secant, brent, etc)
-    - Preprocessing functions for propeller, motor, battery, ESC data
-    - PointResult function
-    - LinePlot functions (one for each input combo)
-    - ContourPlot functions
-    - CubicPlot functions
-    - Pareto Front functions
-    - Mission model compatible functions
-    - GEKKO prop model functions for reference 
-
-Primary inputs:
-    Battery State Of Charge (SOC) as %
-    Freestream Velocity (Vinf) as m/s
-    Throttle Setting (dT) as %
-    
-LinePlot function:
-    By fixing two of these inputs, a line plot of a propulsion quantity (propQ) can be plotted with respect to the third.
-
-ContourPlot function:
-    By fixing one of these inputs, a contour plot of a propQ is plotted wrt the two unfixed inputs.
-
-CubicPlot function:
-    Additionally a cubic plot of propQ variation with all three variables is available, but usually hard to use in reports.
-
-for all of these functions, SOC can be provided as SOC (%), Voc (Volt), or t (s), which assumes constant current (i.e. good for aircraft in cruise)
-
-Available propQs are:
-    T (lbf)     (thrust for all motors)
-    Q (N*m)     (torque for all motors)
-    RPM         (for a single motor/propeler)
-
-nondimensional:
-    CT          (propeller (prop) torque constant)
-    CP          (propeller power constant)
-    eta_p       (propeller efficiency)
-    eta_m       (motor efficiency)
-    eta_c       (controller (ESC) efficiency)
-    eta_drive   (drive efficiency)
-
-all in Watts (W):
-    Pout    (mechanical W for a single motor)
-    Pin_m   (electric W input to a single motor (equivalent to Pout from a single ESC))
-    Pin_c   (electric W input to all ESCs (equivalent to Pout from the battery))
-    
-all in Ampere (A):
-    Im      (motor current for a single motor)
-    Ic      (ESC current for a single ESC)
-    Ib      (battery current)
-    
-all in Volts (V):
-    Voc     (cell voltage)
-    Vb      (battery voltage)
-    Vm      (motor voltage)
-    Vc      (ESC voltage)
-    
-    
 Propeller coefficients (CT, CP) are primarily acquired by interpolation between the APC technical datasheets 
 (see: https://www.apcprop.com/technical-information/performance-data/?v=7516fd43adaa)
 
 These datasheets were generated using Blade Element Theory in conjunction with NASA TAIR and some databases for airfoil data. 
 They are NOT fully accurate, especially for propeller stall, which mostly occurs when propellers low diam/pitch ratios travel at lower freestream velocities. 
-
-Use the APCBEMTvsUIUCexpdata.py file to automatically compare APC electric propeller data from both sources!
-
-While a wonderful amount of experimental data has been gathered by Michael Selig of UIUC's group (see: https://m-selig.ae.illinois.edu/props/propDB.html),
-this data does not extend into the high performance ranges (say RPMs of 6k-12k for ~15-20 inch diameter propellers) that typically occur with 6-12S liPo batteries.
-
-As of 8/29/2025, this experimental data is not implemented yet, but in the future it will be used in conjunction with the APC data for a mixed fidelity approach.
-
-
-
-Model Formulation (primary based on Saemi 2023, secondary if available data based on Gong 2018):
-    Simplified RPM (with constant ESC efficiency and constant I0)
-    SAEMI 2023: https://www.mdpi.com/2226-4310/11/1/16
-    GONG 2018:  https://www.researchgate.net/profile/Andrew-Gong-2/publication/326263042
-    Jeong 2020: https://www.researchgate.net/publication/347270768_Improvement_of_Electric_Propulsion_System_Model_for_Performance_Analysis_of_Large-Size_Multicopter_UAVs
-    
-LiPo discharge curve (Voc(SOC)) from Chen 2006 (https://rincon-mora.gatech.edu/publicat/jrnls/tec05_batt_mdl.pdf):
-    Voc = 3.685 - 1.031 * np.exp(-35 * SOC) + 0.2156 * SOC - 0.1178 * SOC**2 + 0.3201 * SOC**3
-    
-    Alternative from Jeong 2020
-    Voc = 1.7*(SOC**3) - 2.1*(SOC**2) + 1.2*SOC + 3.4
-
-In reality the discharge curve (and total capacity) is strongly influenced by cell temperature and battery health. 
-Corrections on Voc for battery health are optionally defined by inputting Voc at maximum charge (determined experimentally) (NOT IMPLEMENTED AS OF 8/29/2025).
-    
-All of the following constants used in the propulsion model are aquired via the Motors, Batteries, and ESCs CSV sheets, which can all be adjusted by any user.
-Motor constants:    KV (RPM/V), I0 (A), Rm (Ohm)
-Battery constants:  CB (mAh), ns (number of cells in series), Rb (Ohm)
-
-ESC constants (Saemi):      Rds (Ohm), fPWM (Hz), Tsd (s), Psb (W)   <---- currently defaults from Saemi 2023 are used
-ESC constants (Gong):       a_m (the slope of constant a), a_0 (y intercept), b, c_m, c_0  <---- only available for a very limited selection of tested ESCs
-ESC constnats (Jeong):       #TODO FILL IN JEONG CONSTANTS
-    
-KV = speed constant, I0 = no-load current, Rm = motor resistance
-CB = battery capacity, ns = number of cells (in series), Rb = battery resistance
-
-Simplifed RPM formulation (known Vsoc, Vinf, dT):
-    
-    RPM guess
-    J = Vinf/((RPM/60)*d)
-    CP = CPNumba(RPM, J, rpm_list, coef_numba_prop_data)
-    Q = rho*((RPM/60)**2)*(d**5)*(CP/(2*np.pi))
-    Im = Q*KV*(np.pi/30) + I0 # for one motor
-    Ib = (nmot/eta_c)*Im
-    Vb = ns*(Voc) - Ib*Rb
-    Vm = dT*Vb
-    RPMcalc = KV*(Vm - Im*Rm)
-    res = RPMcalc - RPM
-
-Simplified RPM formulation (known runtime (t), constant current):
-
-    RPM guess
-    J = Vinf/((RPM/60)*d)
-    CP = CPNumba(RPM, J, rpm_list, coef_numba_prop_data)
-    Q = rho*((RPM/60)**2)*(d**5)*(CP/(2*np.pi))
-    Im = Q*KV*(np.pi/30) + I0 # for one motor
-    Ib = (nmot/eta_c)*Im
-    SOC = 1.0 - (Ib*t)/(CB*3.6)
-    Voc = 3.685 - 1.031 * np.exp(-35 * SOC) + 0.2156 * SOC - 0.1178 * SOC**2 + 0.3201 * SOC**3
-    Vb = ns*(Voc) - Ib*Rb
-    Vm = dT*Vb
-    RPMcalc = KV*(Vm - Im*Rm)
-    res = RPMcalc - RPM
-    
-minimize res!
-
-This formulation is advantageous for its computational efficiency. With only one variable, plots can be made extremely quickly.
-Significant loss of accuracy due to the constant I0 assumption compared to the other models.
 
     
 @author: NASSAS
@@ -139,7 +13,7 @@ Significant loss of accuracy due to the constant I0 assumption compared to the o
 import pandas as pd
 import numpy as np
 from numpy.polynomial import Polynomial
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, griddata
 
 lbfN = 4.44822
 ftm = 0.3048
@@ -205,13 +79,21 @@ def parse_coef_propeller_data(prop_name):
     # and in each index there is [[V values], [Thrust values], [Torque values]] at the indices, 0, 1, 2
     numba_prop_data = []
     for RPM in PROP_DATA['rpm_list']:
+        # KEY new adjustment that adds empty values to make sure the data is evenly spaced!
+        while PROP_DATA[RPM]['J'].size != 30: # every column should be 30!
+            PROP_DATA[RPM]['J'] = np.append(PROP_DATA[RPM]['J'], PROP_DATA[RPM]['J'][-1])
+            PROP_DATA[RPM]['CT'] = np.append(PROP_DATA[RPM]['CT'], PROP_DATA[RPM]['CT'][-1])
+            PROP_DATA[RPM]['CP'] = np.append(PROP_DATA[RPM]['CP'], PROP_DATA[RPM]['CP'][-1])
+
         datasection = np.array([PROP_DATA[RPM]['J'], 
                                 PROP_DATA[RPM]['CT'], 
                                 PROP_DATA[RPM]['CP']])
         numba_prop_data.append(datasection)
         
+    numba_prop_data = np.stack(numba_prop_data)
     return(PROP_DATA, numba_prop_data)
 
+#%% Functions for CP and CT interpolation based on set RPM and J
 def CPBase(RPM, J, rpm_list, numba_prop_data):
     '''
     J: advance ratio
@@ -285,3 +167,126 @@ def CTBase(RPM, J, rpm_list, numba_prop_data):
     else:
         weight = (RPM - closest_rpms[0]) / (closest_rpms[1] - closest_rpms[0])
         return (1 - weight) * CTs[0] + weight * CTs[1]
+    
+
+#%% Functions for mild optimization methods
+def OptEta(Vinf, rpm_values, numba_prop_data, D, ns = 150):
+    '''
+    Vinf (m/s)
+    D (m)
+    
+    ns = 150 provides an accuracy of around 4 digits for eta, RPM
+    '''
+    allRPMs = np.repeat(rpm_values, 30)
+    allJs = numba_prop_data[:, 0, :].flatten()
+    allCTs = numba_prop_data[:, 1, :].flatten()
+    allCPs = numba_prop_data[:, 2, :].flatten()
+    alletas = (allCTs*allJs)/allCPs
+
+    RPM_g = np.linspace(allRPMs.min(), allRPMs.max(), ns)
+    J_g = np.linspace(allJs.min(), allJs.max(), ns)#numbapropdata[:, 0, :]
+    Jg, RPMg = np.meshgrid(J_g, RPM_g)
+    eta_grid = griddata((allJs, allRPMs), alletas, (Jg, RPMg), method='linear')
+    J_line = Vinf/((RPM_g/60)*D)
+    eta_line = griddata((Jg.flatten(), RPMg.flatten()), eta_grid.flatten(), (J_line, RPM_g), method='linear')
+    valid = ~np.isnan(eta_line)
+    if eta_line[valid].size == 0:
+        return(0.0, 1000)
+    max_idx = np.argmax(eta_line[valid])
+    max_eta = eta_line[valid][max_idx]
+    max_rpm = RPM_g[valid][max_idx]
+    return(max_eta, max_rpm)
+    
+#%% EXTRAS FROM WORKING OUT THE MAGIC
+# import matplotlib.pyplot as plt
+# PROP_DATA, numbapropdata = parse_coef_propeller_data('16x10E')
+# rpm_values = np.array(PROP_DATA['rpm_list'])
+
+# inm = 0.0254
+
+# # holy shit this is so much more efficient. And now numba prop data IS actually a full array!! 
+# # Meaning you should be able to numbafy the whole thing!!! enormous implications
+# allRPMs = np.repeat(rpm_values, 30)
+# allJs = numbapropdata[:, 0, :].flatten()
+# allCTs = numbapropdata[:, 1, :].flatten()
+# allCPs = numbapropdata[:, 2, :].flatten()
+# alletas = (allCTs*allJs)/allCPs
+
+
+
+# fig, ax = plt.subplots(figsize = (6, 4), dpi = 1000)
+# # fill = ax.scatter(allJs, allRPMs, c=allCPs, marker = 's', s = 60)
+# fill = ax.scatter(allJs, allRPMs, c=alletas) #levels = np.linspace(1e-10, allCTs.max(), 15))
+# fig.colorbar(fill, label = 'eta')
+
+# Vinf = 40.0 #m/s
+# J = Vinf/((allRPMs/60)*(16*inm))
+# plt.plot(J[J < allJs.max()], allRPMs[J < allJs.max()])
+
+# plt.xlabel('J')
+# plt.ylabel('RPM')
+# plt.yticks(rpm_values)
+# plt.title(f'Raw Coefficient Data for 16x10E')
+# plt.show()
+# # n = RPM/60
+# # J = V/nD
+# # eta = (CT(RPM, J)*J)/CP(RPM, J)
+# # want to optimize eta for specified J
+
+# # now that we have alletas and allJs this gets a LOT easier
+# # for specified Vinf, we can determine the closest Js for interpolation
+
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from scipy.interpolate import griddata, bisplrep
+
+# # Suppose you already have:
+# # allRPMs, allJs, alletas (same as your code)
+# # and you want max eta for a given Vinf:
+# D = 16 * 0.0254  # convert inches to meters
+
+# # Step 1: Create a fine grid of (J, RPM)
+# ns = 150 # ~4 digits of accuracy!
+# RPM_g = np.linspace(allRPMs.min(), allRPMs.max(), ns)
+# J_g = np.linspace(allJs.min(), allJs.max(), ns)#numbapropdata[:, 0, :]
+# Jg, RPMg = np.meshgrid(J_g, RPM_g)
+# eta_grid = griddata((allJs, allRPMs), alletas, (Jg, RPMg), method='linear')
+# J_line = Vinf/((RPM_g/60)*D)
+# eta_line = griddata((Jg.flatten(), RPMg.flatten()), eta_grid.flatten(), (J_line, RPM_g), method='linear')
+# valid = ~np.isnan(eta_line)
+# max_idx = np.argmax(eta_line[valid])
+# max_eta = eta_line[valid][max_idx]
+# max_rpm = RPM_g[valid][max_idx]
+
+# print(f"Maximum η ≈ {max_eta:.6f} at {max_rpm:.0f} RPM")
+
+# # Optional: plot the efficiency curve vs RPM
+# plt.figure(figsize=(6,4))
+# plt.plot(RPM_g, eta_line, label=f'V∞ = {Vinf} m/s')
+# plt.scatter(max_rpm, max_eta, color='red', zorder=5, label='Max η')
+# plt.xlabel('RPM')
+# plt.ylabel('η')
+# plt.title('Interpolated Efficiency vs RPM')
+# plt.legend()
+# plt.show()
+
+# #%% try2 with bsplines (does not work)
+# from scipy.interpolate import make_interp_spline, RBFInterpolator, bisplev, SmoothBivariateSpline, RegularGridInterpolator
+
+# #### the following code works but the fit is too inaccurate near the peak. griddata was just better all along
+# # RPMspec = np.linspace(allRPMs.min(), allRPMs.max(), 1000)
+# # J_spec = Vinf/((RPMspec/60)*D)
+# # mask = J_spec <= allJs.max()
+# # RPMspec = RPMspec[mask]
+# # J_spec = J_spec[mask]
+
+# # plt.figure(figsize=(6,4))
+# # plt.plot(RPMspec, SmoothBivariateSpline(allJs, allRPMs, alletas).ev(J_spec, RPMspec), label=f'V∞ = {Vinf} m/s')
+# # # plt.scatter(max_rpm, max_eta, color='red', zorder=5, label='Max η')
+# # plt.xlabel('RPM')
+# # plt.ylabel('η')
+# # plt.ylim([0.45, 0.85])
+# # plt.xlim([6000, 16000])
+
+# # plt.title('Interpolated Efficiency vs RPM')
+# # plt.legend()
