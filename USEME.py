@@ -17,19 +17,28 @@ Then you will get an efficiency map with limits!
 @author: NASSAS
 """
 
-from APCPropellerTool import EfficiencyMap, OptimalEfficiencyMap
+from APCPropellerTool import EfficiencyMap, OptimalRPMEfficiencyMap, OptimalEfficiencyMap, ThrustRPMEfficiencyMap
 
 #%% Example usage!
-Vinf = 30 #m/s
+Vinf = 15.0 #m/s
 RPM = 7600
-Sw = 0.81
-CD = 0.045
-Plimit = 3000
+Sw = 0.87
+CD = 0.27
+Plimit = 1100
 
-EfficiencyMap(Vinf, RPM, Sw = Sw, CD = CD, Plimit = Plimit)
+# EfficiencyMap(Vinf, RPM, Sw = Sw, CD = CD, Plimit = Plimit)
 
-#%% Optimal Efficiency map (determines the best RPM for the given freestream velocity automatically)
+#%% Optimal RPM Efficiency map (determines the best RPM for the given freestream velocity automatically)
 # will take ~20-30s to run for all APC electric props and ~2 min 10s for all APC props
 # NOTE: constraints will not always result in a feasible result since RPM is selected soley for max efficiency
 
-OptimalEfficiencyMap(Vinf, Sw = Sw, CD = CD, Plimit = Plimit)
+# This is the optimal RPM DISCOUNTING constraints
+# OptimalRPMEfficiencyMap(Vinf, Sw = Sw, CD = CD, 
+#                        Plimit = Plimit, 
+#                        prop_types = 'electric')
+    
+    
+#%% Optimal Efficiency Map 
+# Automatically determines unconstrained Vinf and RPM for maximum efficiency of each propeller
+OptimalEfficiencyMap(prop_types = 'electric')
+

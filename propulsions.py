@@ -170,12 +170,14 @@ def CTBase(RPM, J, rpm_list, numba_prop_data):
     
 
 #%% Functions for mild optimization methods
-def OptEta(Vinf, rpm_values, numba_prop_data, D, ns = 150):
+def OptRPMeta(Vinf, rpm_values, numba_prop_data, D, ns = 150):
     '''
     Vinf (m/s)
     D (m)
     
     ns = 150 provides an accuracy of around 4 digits for eta, RPM
+    
+    determines the RPM of max efficiency for the selected prop at specified RPM
     '''
     allRPMs = np.repeat(rpm_values, 30)
     allJs = numba_prop_data[:, 0, :].flatten()
@@ -196,6 +198,65 @@ def OptEta(Vinf, rpm_values, numba_prop_data, D, ns = 150):
     max_eta = eta_line[valid][max_idx]
     max_rpm = RPM_g[valid][max_idx]
     return(max_eta, max_rpm)
+
+#%% For RPM such that T meets the requirement for cruise
+def ThrustRPMeta(Vinf, Treq, rho, rpm_values, numba_prop_data, D, ns = 150):
+    '''
+    Vinf (m/s)
+    D (m)
+    
+    ns = 150 provides an accuracy of around 4 digits for eta, RPM
+    
+    determines the RPM to meet T = D
+    '''
+    allRPMs = np.repeat(rpm_values, 30)
+    allJs = numba_prop_data[:, 0, :].flatten()
+    allCTs = numba_prop_data[:, 1, :].flatten()
+    allCPs = numba_prop_data[:, 2, :].flatten()
+    alletas = (allCTs*allJs)/allCPs
+
+    T = rho*((allRPMs/60)**2)*(D**4)*allCTs # thrust in N
+    RPM_g = np.linspace(allRPMs.min(), allRPMs.max(), ns)
+    J_g = np.linspace(allJs.min(), allJs.max(), ns)#numbapropdata[:, 0, :]
+    Jg, RPMg = np.meshgrid(J_g, RPM_g)
+    T_grid = griddata((allJs, allRPMs), T, (Jg, RPMg), method='linear')
+    J_line = Vinf/((RPM_g/60)*D)
+    T_line = griddata((Jg.flatten(), RPMg.flatten()), T_grid.flatten(), (J_line, RPM_g), method='linear')
+    valid = ~np.isnan(T_line)
+    if T_line[valid].size == 0:
+        return(0.0, 1000)
+    
+    eta_grid = griddata((allJs, allRPMs), alletas, (Jg, RPMg), method='linear')
+    eta_line = griddata((Jg.flatten(), RPMg.flatten()), eta_grid.flatten(), (J_line, RPM_g), method='linear')
+    if eta_line[valid].size == 0:
+        return(0.0, 1000)
+    
+    TDidx = np.argmin(np.abs(T_line[valid] - Treq))
+    eta_TD = eta_line[valid][TDidx]
+    RPM_TD = RPM_g[valid][TDidx]
+    return(eta_TD, RPM_TD)
+
+#%% Full eta optimization
+# goal: for a given propeller, find the RPM and velocity for maximum efficiency
+def OptEta(rpm_values, numba_prop_data, D, ns = 150):
+    '''
+    D (m)
+    
+    ns = 150 provides an accuracy of around 4 digits for eta, RPM
+    '''
+    allRPMs = np.repeat(rpm_values, 30)
+    allJs = numba_prop_data[:, 0, :].flatten()
+    allCTs = numba_prop_data[:, 1, :].flatten()
+    allCPs = numba_prop_data[:, 2, :].flatten()
+    alletas = (allCTs*allJs)/allCPs
+    maxloc = np.argmax(alletas)
+    
+    optEta = alletas.max()
+    optRPM = allRPMs[maxloc]
+    optVinf = allJs[maxloc]*((optRPM/60)*D)
+    
+    return(optRPM, optVinf, optEta)
+
     
 #%% EXTRAS FROM WORKING OUT THE MAGIC
 # import matplotlib.pyplot as plt
@@ -267,6 +328,29 @@ def OptEta(Vinf, rpm_values, numba_prop_data, D, ns = 150):
 # plt.xlabel('RPM')
 # plt.ylabel('η')
 # plt.title('Interpolated Efficiency vs RPM')
+
+# # ok now lets suppose you have a P and T req
+# rho = 1.19
+# # say T = 15 N
+# # say P = 3000 W
+# Plim = 3000
+# Tlim = 30
+
+# P = rho*((allRPMs/60)**3)*(D**5)*allCPs
+# T = rho*((allRPMs/60)**2)*(D**4)*allCTs
+# T_grid = griddata((allJs, allRPMs), T, (Jg, RPMg), method='linear')
+# T_line = griddata((Jg.flatten(), RPMg.flatten()), T_grid.flatten(), (J_line, RPM_g), method='linear')
+# Tlimloc = np.argmin(np.abs(T_line[~np.isnan(T_line)] - Tlim))
+# Tmax = T_line[~np.isnan(T_line)].max()
+# plt.plot(RPM_g, T_line/Tmax, label='norm T')
+# plt.scatter(RPM_g[~np.isnan(T_line)][Tlimloc], T_line[~np.isnan(T_line)][Tlimloc]/Tmax, label = 'Tlimit')
+# P_grid = griddata((allJs, allRPMs), P, (Jg, RPMg), method='linear')
+# P_line = griddata((Jg.flatten(), RPMg.flatten()), P_grid.flatten(), (J_line, RPM_g), method='linear')
+# Pmax = P_line[~np.isnan(P_line)].max()
+# plt.plot(RPM_g, P_line/Pmax, label='norm P')
+# Plimloc = np.argmin(np.abs(P_line[~np.isnan(P_line)] - Plim))
+# plt.scatter(RPM_g[~np.isnan(P_line)][Plimloc], P_line[~np.isnan(P_line)][Plimloc]/Pmax, label = 'Plimit')
+
 # plt.legend()
 # plt.show()
 
