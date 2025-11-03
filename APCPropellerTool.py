@@ -944,7 +944,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
     #     print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
     #     plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
 
-    plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Unconstrained\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s')
+    plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Maximum\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s')
 
     plt.legend(fontsize = 7)
     plt.colorbar(img, label = r'$\eta_p$ (%)')

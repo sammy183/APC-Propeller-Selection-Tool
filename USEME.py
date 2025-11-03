@@ -14,6 +14,9 @@ How this works:
     
 Then you will get an efficiency map with limits! 
 
+Alternatively:
+    Input aircraft Sw, CD, Plimit and let the optimization go!
+
 @author: NASSAS
 """
 from APCPropellerTool import EfficiencyMap, OptimalRPMEfficiencyMap, OptimalEfficiencyMap, ThrustRPMEfficiencyMap, UnconstrainedOptimalEfficiencyMap
@@ -21,9 +24,9 @@ from APCPropellerTool import EfficiencyMap, OptimalRPMEfficiencyMap, OptimalEffi
 #%% Basic Efficiency map
 Vinf = 30 #m/s
 RPM = 6300 
-Sw = 0.6
+Sw = 0.6 # m^2
 CD = 0.03
-Plimit = 500
+Plimit = 500 # W
 
 EfficiencyMap(Vinf, RPM, Sw = Sw, CD = CD, Plimit = Plimit)
 
