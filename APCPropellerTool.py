@@ -901,7 +901,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
     lines3 = ax.tricontour(diameters, pitches, RPMs/1000, levels = 5, colors = 'k')
     ax.clabel(lines3, levels = lines3.levels, fmt = '%.0f kRPM', fontsize = clabelsize, inline_spacing = spacing)
 
-    lines4 = ax.tricontour(diameters, pitches, Vinfs, levels = 5, colors = 'orangered')
+    lines4 = ax.tricontour(diameters, pitches, Vinfs, levels = 5, colors = '#cc0000')
     ax.clabel(lines4, levels = lines4.levels, fmt = '%.0f m/s', fontsize = clabelsize, inline_spacing = spacing)
 
     # lines4 = ax.tricontour(diameters, pitches, Ts, levels = 3, colors = '#666666')
@@ -926,23 +926,23 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
         useE = ''
     print(f'Maximum Propeller Efficiency (unconstrained) is {etas.max()*100:.1f}% with the {diammax}x{pitchmax}{useE} at {RPMs[maxidx]:.0f} RPM and {Vinfs[maxidx]:.1f} m/s')
         
-    # # location of maximum constrained efficiency (via masks)
-    eta_adjust = etas.copy()
-    eta_adjust[goodidx] = 0.0
-    if eta_adjust.max() == 0.0:
-        print('ERROR: Constraints infeasible for propellers at RPM of maximum efficiency!')
-    else:
-        con_maxidx = np.argmax(eta_adjust)
-        if diameters[con_maxidx].is_integer():
-            con_diammax = int(diameters[con_maxidx])
-        else:
-            con_diammax = diameters[con_maxidx]
-        if pitches[con_maxidx].is_integer():
-            con_pitchmax = int(pitches[con_maxidx])
-        else:
-            con_pitchmax = pitches[con_maxidx]
-        print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
-        plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
+    # # # location of maximum constrained efficiency (via masks)
+    # eta_adjust = etas.copy()
+    # eta_adjust[goodidx] = 0.0
+    # if eta_adjust.max() == 0.0:
+    #     print('ERROR: Constraints infeasible for propellers at RPM of maximum efficiency!')
+    # else:
+    #     con_maxidx = np.argmax(eta_adjust)
+    #     if diameters[con_maxidx].is_integer():
+    #         con_diammax = int(diameters[con_maxidx])
+    #     else:
+    #         con_diammax = diameters[con_maxidx]
+    #     if pitches[con_maxidx].is_integer():
+    #         con_pitchmax = int(pitches[con_maxidx])
+    #     else:
+    #         con_pitchmax = pitches[con_maxidx]
+    #     print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
+    #     plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
 
     plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Unconstrained\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s')
 
@@ -950,7 +950,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
     plt.colorbar(img, label = r'$\eta_p$ (%)')
     plt.xlabel('Diameter (in)')
     plt.ylabel('Pitch (in)')
-    plt.title('APC Propeller Efficiencies')
+    plt.title('Optimal APC Propeller Efficiencies')
     plt.minorticks_on()
     plt.grid()
     plt.show()

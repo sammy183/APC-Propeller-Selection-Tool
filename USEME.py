@@ -33,4 +33,4 @@ Sw = 0.6
 CD = 0.03
 Plimit = 500
 
-OptimalEfficiencyMap(Sw, CD, Plimit = Plimit, diamlimit = 23, prop_types = 'all')
+OptimalEfficiencyMap(Sw, CD, Plimit = Plimit, prop_types = 'electric')
