@@ -924,7 +924,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
         useE = 'E'
     else:
         useE = ''
-    print(f'Maximum Propeller Efficiency (unconstrained) is {etas.max()*100:.1f}% with the {diammax}x{pitchmax}{useE} at {RPMs[maxidx]:.0f} RPM and {Vinfs[maxidx]:.1f} m/s')
+    print(f'Maximum Propeller Efficiency (unconstrained) is {etas.max()*100:.1f}% with the {diammax}x{pitchmax}{useE} at {RPMs[maxidx]:.0f} RPM, {Vinfs[maxidx]:.1f} m/s, {Ps[maxidx]:.0f} W')
         
     # # # location of maximum constrained efficiency (via masks)
     # eta_adjust = etas.copy()
@@ -944,7 +944,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
     #     print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
     #     plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
 
-    plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Maximum\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s')
+    plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Maximum\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s\n{Ps[maxidx]:.0f} W')
 
     plt.legend(fontsize = 7)
     plt.colorbar(img, label = r'$\eta_p$ (%)')
