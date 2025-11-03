@@ -10,8 +10,10 @@
 6. Enjoy!
 
 ## Sample Plots
-Example of the basic RPM, Vinf efficiency map (Sw = 0.6 $m^2$, CD = 0.03, Pmax < 500 W)
+Basic fixed RPM, Vinf efficiency map (Sw = 0.6 $m^2$, CD = 0.03, Pmax < 500 W)
 ![Sample fixed RPM, Vinf efficiency map](Sample_7600RPM_30Vinf_electric.png)
 
-Example of an Optimized RPM, Vinf efficiency map (Sw = 0.6 $m^2$, CD = 0.03, Pmax < 500 W)
-![Sample fixed Vinf, optimal RPM efficiency map](Sample_optimalRPMVinf_electric.png)
+Optimized RPM, Vinf efficiency map (Sw = 0.6 $m^2$, CD = 0.03, Pmax < 500 W)
+![Sample fixed Vinf, optimal RPM efficiency map](Sample_OptimalRPMVinf_electric.png)
+
+
