@@ -133,6 +133,8 @@ def EfficiencyMap(Vinf, RPM,
     
     etas = np.array(etas)
     etanozero = etas[etas > 0.0]
+    if etanozero.size == 0:
+        raise KeyError('No feasible propellers for selected RPM, Vinf!\nIncrease RPM or decrease Vinf')
     mask = etas > etanozero.min()
     etas = etas[mask]
     Ts = np.array(Ts)[mask]
@@ -140,7 +142,7 @@ def EfficiencyMap(Vinf, RPM,
     diameters = np.array(diameters)[mask]
     pitches = np.array(pitches)[mask]
     goodidx = np.array([False]*etas.size)
-
+    
     fig, ax = plt.subplots(figsize = (6, 4), dpi = 1000)
     img = ax.tricontourf(diameters, pitches, etas*100, levels = grade)#np.linspace(0, 1200, 15))
 
@@ -523,7 +525,7 @@ def ThrustRPMEfficiencyMap(Vinf,
         
     if Plimit < 1e6:
         lines2 = ax.tricontour(diameters, pitches, Ps/1000, levels = [Plimit/1000], colors = 'orangered')
-        ax.clabel(lines2, levels = lines2.levels, fmt = '%.0f kW', fontsize = clabelsize, inline_spacing = spacing)
+        ax.clabel(lines2, levels = lines2.levels, fmt = '%.1f kW', fontsize = clabelsize, inline_spacing = spacing)
         lines2.set(path_effects = [patheffects.withTickedStroke(spacing = 10, angle = 135, length = 0.5)])
         goodidx[Ps > Plimit] = True
         
@@ -540,7 +542,7 @@ def ThrustRPMEfficiencyMap(Vinf,
     #     ax.legend()
         
     lines3 = ax.tricontour(diameters, pitches, RPMs/1000, levels = 5, colors = 'k')
-    ax.clabel(lines3, levels = lines3.levels, fmt = '%.0f kRPM', fontsize = clabelsize, inline_spacing = spacing)
+    ax.clabel(lines3, levels = lines3.levels, fmt = '%.1f kRPM', fontsize = clabelsize, inline_spacing = spacing)
 
     # lines4 = ax.tricontour(diameters, pitches, Ts, levels = 9)
     # ax.clabel(lines4, levels = lines4.levels, fmt = '%.1f N', fontsize = clabelsize, inline_spacing = spacing)
@@ -924,7 +926,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
         useE = 'E'
     else:
         useE = ''
-    print(f'Maximum Propeller Efficiency (unconstrained) is {etas.max()*100:.1f}% with the {diammax}x{pitchmax}{useE} at {RPMs[maxidx]:.0f} RPM, {Vinfs[maxidx]:.1f} m/s, {Ps[maxidx]:.0f} W')
+    print(f'Maximum Propeller Efficiency is {etas.max()*100:.1f}% with the {diammax}x{pitchmax}{useE} at {RPMs[maxidx]:.0f} RPM, {Vinfs[maxidx]:.1f} m/s, {Ps[maxidx]:.0f} W')
         
     # # # location of maximum constrained efficiency (via masks)
     # eta_adjust = etas.copy()
