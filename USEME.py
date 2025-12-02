@@ -17,17 +17,17 @@ Then you will get an efficiency map with limits!
 Alternatively:
     Input aircraft Sw, CD, Plimit and let the optimization go!
 
-@author: NASSAS
+@author: Sammy N. Nassau
 """
-from APCPropellerTool import EfficiencyMap, OptimalRPMEfficiencyMap, OptimalEfficiencyMap, ThrustRPMEfficiencyMap, UnconstrainedOptimalEfficiencyMap
+from APCPropellerTool import EfficiencyMap, OptimalEfficiencyMap, ThrustRPMEfficiencyMap
 
 #%% Basic efficiency map
 # Input Vinf, RPM --> get propeller efficiency over all pitches and diameters in the APC database
-Vinf = 30 #m/s
+Vinf = 30       # freestream velocity, m/s
 RPM = 7600    
-Sw = 0.6 # m^2
-CD = 0.03
-Plimit = 900 # mechanical W; note that electrical W required to meet this will be higher
+Sw = 0.6        # wing area, m^2
+CD = 0.03       # drag coefficient
+Plimit = 900    # mechanical W; note that electrical W required to meet this will be higher
 
 EfficiencyMap(Vinf, RPM, Sw = Sw, CD = CD, Plimit = Plimit, prop_types = 'electric')
 # runtime ~ 0.5s
@@ -40,13 +40,15 @@ Plimit = 500
 
 # OptimalEfficiencyMap(Sw, CD, Plimit = Plimit, prop_types = 'electric')
 # runtime ~ 1 minute
+
 #%% Thrust-constrained optimal RPM efficiency map
 # for a given design speed (Vinf) and aircraft parameters, optimize RPM for maximum propeller efficiency
 Vinf = 65
 Sw = 0.6
 CD = 0.022
 Plimit = 3000
-maxdiam = 19 # maximum propeller diameter in inches
+maxdiam = 19    # maximum propeller diameter in inches
 
-# ThrustRPMEfficiencyMap(Vinf, Sw=Sw, CD=CD, Plimit=Plimit, diamlimit = maxdiam, prop_types = 'all')
+# ThrustRPMEfficiencyMap(Vinf, Sw = Sw, CD=CD, Plimit=Plimit, 
+#                        diamlimit = maxdiam, prop_types = 'electric')
 # runtime ~2 minutes

@@ -325,6 +325,8 @@ def ThrustRPMeta(Vinf, Treq, rho, rpm_values, numba_prop_data, D, ns = 150):
     ns = 150 provides an accuracy of around 4 digits for eta, RPM
     
     determines the RPM to meet T = D
+    
+    # todo: replace with numbafied functions that work much faster
     '''
     allRPMs = np.repeat(rpm_values, 30)
     allJs = numba_prop_data[:, 0, :].flatten()

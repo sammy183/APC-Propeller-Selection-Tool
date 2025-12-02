@@ -929,22 +929,22 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
     print(f'Maximum Propeller Efficiency is {etas.max()*100:.1f}% with the {diammax}x{pitchmax}{useE} at {RPMs[maxidx]:.0f} RPM, {Vinfs[maxidx]:.1f} m/s, {Ps[maxidx]:.0f} W')
         
     # # # location of maximum constrained efficiency (via masks)
-    # eta_adjust = etas.copy()
-    # eta_adjust[goodidx] = 0.0
-    # if eta_adjust.max() == 0.0:
-    #     print('ERROR: Constraints infeasible for propellers at RPM of maximum efficiency!')
-    # else:
-    #     con_maxidx = np.argmax(eta_adjust)
-    #     if diameters[con_maxidx].is_integer():
-    #         con_diammax = int(diameters[con_maxidx])
-    #     else:
-    #         con_diammax = diameters[con_maxidx]
-    #     if pitches[con_maxidx].is_integer():
-    #         con_pitchmax = int(pitches[con_maxidx])
-    #     else:
-    #         con_pitchmax = pitches[con_maxidx]
-    #     print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
-    #     plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
+    eta_adjust = etas.copy()
+    eta_adjust[goodidx] = 0.0
+    if eta_adjust.max() == 0.0:
+        print('ERROR: Constraints infeasible for propellers at RPM of maximum efficiency!')
+    else:
+        con_maxidx = np.argmax(eta_adjust)
+        if diameters[con_maxidx].is_integer():
+            con_diammax = int(diameters[con_maxidx])
+        else:
+            con_diammax = diameters[con_maxidx]
+        if pitches[con_maxidx].is_integer():
+            con_pitchmax = int(pitches[con_maxidx])
+        else:
+            con_pitchmax = pitches[con_maxidx]
+        print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
+        plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
 
     plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Maximum\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s\n{Ps[maxidx]:.0f} W')
 
