@@ -10,7 +10,6 @@ They are NOT fully accurate, especially for propeller stall, which mostly occurs
 @author: NASSAS
 """
 
-import pandas as pd
 import numpy as np
 from numpy.polynomial import Polynomial
 from scipy.interpolate import interp1d, griddata
@@ -351,8 +350,13 @@ def ThrustRPMeta(Vinf, Treq, rho, rpm_values, numba_prop_data, D, ns = 150):
         return(0.0, 1000)
     
     TDidx = np.argmin(np.abs(T_line[valid] - Treq))
+    if np.min(np.abs(T_line[valid] - Treq)) >= 1: # check that it can actually meet the thrust req
+        raise ValueError('Thrust not matched')
+        
     eta_TD = eta_line[valid][TDidx]
     RPM_TD = RPM_g[valid][TDidx]
+    
+    
     return(eta_TD, RPM_TD)
 
 #%% Full eta optimization

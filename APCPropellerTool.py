@@ -483,7 +483,10 @@ def ThrustRPMEfficiencyMap(Vinf,
         rpm_values = np.array(PROP_DATA['rpm_list'])
         
         # RPM and eta corresponding to T = D
-        eta, RPM = ThrustRPMeta(Vinf, Treq, rho, rpm_values, numba_prop_data, D, ns = 150)
+        try:
+            eta, RPM = ThrustRPMeta(Vinf, Treq, rho, rpm_values, numba_prop_data, D, ns = 150)
+        except:
+            continue
         RPMs.append(RPM)
         etas.append(eta)
         J = Vinf/((RPM/60)*D)
@@ -506,7 +509,7 @@ def ThrustRPMEfficiencyMap(Vinf,
     goodidx = np.array([False]*etas.size)
 
     fig, ax = plt.subplots(figsize = (6, 4), dpi = 1000)
-    img = ax.tricontourf(diameters, pitches, etas*100, levels = grade)#np.linspace(0, 1200, 15))
+    img = ax.tricontourf(diameters, pitches, etas*100, levels = grade)
 
     clabelsize = 6
     spacing = 50
@@ -547,8 +550,8 @@ def ThrustRPMEfficiencyMap(Vinf,
     # lines4 = ax.tricontour(diameters, pitches, Ts, levels = 9)
     # ax.clabel(lines4, levels = lines4.levels, fmt = '%.1f N', fontsize = clabelsize, inline_spacing = spacing)
 
-    # lines5 = ax.tricontour(diameters, pitches, Ps, levels = 9, colors = 'k')
-    # ax.clabel(lines5, levels = lines5.levels, fmt = '%.1f W', fontsize = clabelsize, inline_spacing = spacing)
+    # lines5 = ax.tricontour(diameters, pitches, Ps/1000, levels = 5, colors = 'orangered')
+    # ax.clabel(lines5, levels = lines5.levels, fmt = '%.1f kW', fontsize = clabelsize, inline_spacing = spacing)
 
     # location of maximum efficiency
     maxidx = np.argmax(etas)
@@ -583,16 +586,16 @@ def ThrustRPMEfficiencyMap(Vinf,
         else:
             con_pitchmax = pitches[con_maxidx]
         print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM')
-        plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Max Constrained\n{con_diammax}x{con_pitchmax}{useE}; {eta_adjust.max()*100:.1f}% $\\eta_p$; {RPMs[con_maxidx]:.0f} RPM')
+        plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Max Constrained\n{con_diammax}x{con_pitchmax}{useE}; {eta_adjust.max()*100:.1f}% $\\eta_p$; {RPMs[con_maxidx]:.0f} RPM, {Ps[con_maxidx]:.0f} W')
 
-    plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Max Unconstrained\n{diammax}x{pitchmax}{useE}; {etas.max()*100:.1f}% $\\eta_p$; {RPMs[maxidx]:.0f} RPM')
+    plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Max Unconstrained\n{diammax}x{pitchmax}{useE}; {etas.max()*100:.1f}% $\\eta_p$; {RPMs[maxidx]:.0f} RPM; {Ps[maxidx]:.0f} W')
 
     plt.legend(fontsize = 7, loc = 'lower right')
     plt.colorbar(img, label = r'$\eta_p$ (%)')
     # img = ax.scatter(diameters, pitches)
     plt.xlabel('Diameter (in)')
     plt.ylabel('Pitch (in)')
-    plt.title(f'APC Propeller Efficiencies at {Vinf:.2f} m/s and RPMs for T = {Treq:.1f} N')
+    plt.title(f'APC Propeller Efficiencies and RPMs at {Vinf:.2f} m/s with T = {Treq:.1f} N')
     plt.minorticks_on()
     plt.grid()
     plt.show()
@@ -885,13 +888,12 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
 
     fig, ax = plt.subplots(figsize = (6, 4), dpi = 1000)
     img = ax.tricontourf(diameters, pitches, etas*100, levels = grade)#np.linspace(0, 1200, 15))
-
     clabelsize = 6
     spacing = 50
     if Plimit < 1e6:
-        lines2 = ax.tricontour(diameters, pitches, Ps/1000, levels = [Plimit], colors = 'orangered')
-        ax.clabel(lines2, levels = lines2.levels, fmt = '%.0f kW', fontsize = clabelsize, inline_spacing = spacing)
-        # lines2.set(path_effects = [patheffects.withTickedStroke(spacing = 10, angle = 135, length = 0.5)])
+        lines2 = ax.tricontour(diameters, pitches, Ps, levels = [Plimit], colors = 'orangered')
+        ax.clabel(lines2, levels = lines2.levels, fmt = '%.0f W', fontsize = clabelsize, inline_spacing = spacing)
+        lines2.set(path_effects = [patheffects.withTickedStroke(spacing = 10, angle = 135, length = 0.5)])
         goodidx[Ps > Plimit] = True
         
     if diamlimit < 1e6:
@@ -900,16 +902,15 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
         goodidx[diameters > diamlimit] = True
 
         
-    lines3 = ax.tricontour(diameters, pitches, RPMs/1000, levels = 5, colors = 'k')
+    lines3 = ax.tricontour(diameters, pitches, RPMs/1000, levels = 3, colors = 'k')
     ax.clabel(lines3, levels = lines3.levels, fmt = '%.0f kRPM', fontsize = clabelsize, inline_spacing = spacing)
 
-    lines4 = ax.tricontour(diameters, pitches, Vinfs, levels = 5, colors = '#cc0000')
+    lines4 = ax.tricontour(diameters, pitches, Vinfs, levels =  [np.floor(np.max(Vinfs))*0.833, np.floor(np.max(Vinfs))*0.966, np.floor(np.max(Vinfs))], colors = '#cc0000')
     ax.clabel(lines4, levels = lines4.levels, fmt = '%.0f m/s', fontsize = clabelsize, inline_spacing = spacing)
-
-    # lines4 = ax.tricontour(diameters, pitches, Ts, levels = 3, colors = '#666666')
+    # lines4 = ax.tricontour(diameters, pitches, Ts, levels =  np.linspace(0.8*np.max(Ts), np.max(Ts), 3), colors = '#666666')
     # ax.clabel(lines4, levels = lines4.levels, fmt = '%.0f N', fontsize = clabelsize, inline_spacing = spacing)
-    # lines4 = ax.tricontour(diameters, pitches, Ps, levels = 3, colors = 'blue')
-    # ax.clabel(lines4, levels = lines4.levels, fmt = '%.0f kW', fontsize = clabelsize, inline_spacing = spacing)
+    # lines4 = ax.tricontour(diameters, pitches, Ps/1000, levels = [np.floor(np.max(Ps/1000))*0.833, np.floor(np.max(Ps/1000))*0.966, np.floor(np.max(Ps/1000))], colors = 'orangered')
+    # ax.clabel(lines4, levels = lines4.levels, fmt = '%.3f kW', fontsize = clabelsize, inline_spacing = spacing)
 
     # location of maximum efficiency
     maxidx = np.argmax(etas)
