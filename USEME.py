@@ -57,7 +57,7 @@ CD = 0.03
 Plimit = 1000 
 maxdiam = 23    # maximum propeller diameter in inches
 
-ThrustRPMEfficiencyMap(Vinf, Sw = Sw, CD=CD, Plimit=Plimit, 
-                       diamlimit = maxdiam, prop_types = 'electric')
+# ThrustRPMEfficiencyMap(Vinf, Sw = Sw, CD=CD, Plimit=Plimit, 
+#                        diamlimit = maxdiam, prop_types = 'electric')
 
 # runtime ~2 minutes
