@@ -527,8 +527,8 @@ def ThrustRPMEfficiencyMap(Vinf,
     #     goodidx[Ts < D] = True
         
     if Plimit < 1e6:
-        lines2 = ax.tricontour(diameters, pitches, Ps/1000, levels = [Plimit/1000], colors = 'orangered')
-        ax.clabel(lines2, levels = lines2.levels, fmt = '%.1f kW', fontsize = clabelsize, inline_spacing = spacing)
+        lines2 = ax.tricontour(diameters, pitches, Ps, levels = [Plimit], colors = 'orangered')
+        ax.clabel(lines2, levels = lines2.levels, fmt = '%.0f W', fontsize = clabelsize, inline_spacing = spacing)
         lines2.set(path_effects = [patheffects.withTickedStroke(spacing = 10, angle = 135, length = 0.5)])
         goodidx[Ps > Plimit] = True
         
@@ -945,7 +945,7 @@ def OptimalEfficiencyMap(Sw, CD, rho = 1.225, Plimit = 1e6,
         else:
             con_pitchmax = pitches[con_maxidx]
         print(f'Maximum Propeller Efficiency (constrained) is {eta_adjust.max()*100:.1f}% with the {con_diammax}x{con_pitchmax}{useE} at {RPMs[con_maxidx]:.0f} RPM and {Vinfs[con_maxidx]:.1f} m/s')
-        plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s')
+        plt.scatter(con_diammax, con_pitchmax, marker = 'x', color = 'blue', label = f'Constrained\n{con_diammax}x{con_pitchmax}{useE}\n{eta_adjust.max()*100:.1f}% $\\eta_p$\n{RPMs[con_maxidx]:.0f} RPM\n{Vinfs[con_maxidx]:.1f} m/s\n{Ps[maxidx]:.0f} W')
 
     plt.scatter(diammax, pitchmax, marker = '^', color = 'black', label = f'Maximum\n{diammax}x{pitchmax}{useE}\n{etas.max()*100:.1f}% $\\eta_p$\n{RPMs[maxidx]:.0f} RPM\n{Vinfs[maxidx]:.1f} m/s\n{Ps[maxidx]:.0f} W')
 

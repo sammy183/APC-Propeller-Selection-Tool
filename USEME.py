@@ -45,7 +45,7 @@ Plimit = 1000   # shaft power limit in W
 diamlimit = 23  # maximum propeller diameter in inches
 
 # OptimalEfficiencyMap(Sw, CD, Plimit = Plimit,  
-#                      diamlimit = 23, prop_types = 'electric')
+#                      diamlimit = diamlimit, prop_types = 'electric')
 
 # runtime ~ 1 minute
 
@@ -54,7 +54,6 @@ diamlimit = 23  # maximum propeller diameter in inches
 Vinf = 30
 Sw = 0.89
 CD = 0.03
-Plimit = 1000 
 maxdiam = 23    # maximum propeller diameter in inches
 
 # ThrustRPMEfficiencyMap(Vinf, Sw = Sw, CD=CD, Plimit=Plimit, 
